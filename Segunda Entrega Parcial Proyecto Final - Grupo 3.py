@@ -1,8 +1,8 @@
 class Proyecto:
-    def __init__(self,SD,DL,user,desc):
+    def __init__(self,SD,DL,nombre,desc):
         self.StartDate = SD
         self.Deadline = DL
-        self.name= user
+        self.name= nombre
         self.description = desc
         self.siguiente = None
 
@@ -68,10 +68,11 @@ class ListaProyectos(ListaSE):
     def ImprimirElementos(self):
         actualProyecto = self.cabeza
         while(actualProyecto):
-            print(actualProyecto.StartDate)
-            print(actualProyecto.Deadline)
-            print(actualProyecto.name)
-            print(actualProyecto.description)
+            print("Nombre del proyecto:", actualProyecto.name)
+            print("Fecha de Inicio: ",actualProyecto.StartDate)
+            print("Fecha Límite: ", actualProyecto.Deadline)            
+            print("Descripción: ", actualProyecto.description)
+            print("------------------")
             actualProyecto = actualProyecto.siguiente
 
 class Arbol:
@@ -81,22 +82,29 @@ class Arbol:
         self.raiz = usuario
 
     def __agregar_recursivo(self, nodo, usuario):
-        if usuario.codigo < nodo.codigo:
-            if nodo.izquierda is None:
-                nodo.izquierda = usuario
+
+        if nodo is None:
+            self.raiz = usuario
+        
+        else: 
+
+            if usuario.codigo < nodo.codigo:
+                if nodo.izquierda is None:
+                    nodo.izquierda = usuario
+                else:
+                    self.__agregar_recursivo(nodo.izquierda, usuario)
             else:
-                self.__agregar_recursivo(nodo.izquierda, usuario)
-        else:
-            if nodo.derecha is None:
-                nodo.derecha = usuario
-            else:
-                self.__agregar_recursivo(nodo.derecha, usuario)
+                if nodo.derecha is None:
+                    nodo.derecha = usuario
+                else:
+                    self.__agregar_recursivo(nodo.derecha, usuario)
 
     def __inorden_recursivo(self, nodo):
         if nodo is not None:
             self.__inorden_recursivo(nodo.izquierda)
-            print(nodo.name, "/" , nodo.password, "/", nodo.email)
+            print("Usuario: ", nodo.name, "/" , "Codigo: ", nodo.codigo, "/","Email: ", nodo.email)
             if nodo.proyectosAsociados != None:
+                print("Proyectos Asociados: ")
                 nodo.proyectosAsociados.ImprimirElementos()
             self.__inorden_recursivo(nodo.derecha)
 
@@ -115,7 +123,10 @@ class Arbol:
             self.__postorden_recursivo(nodo.izquierda)
         
             self.__postorden_recursivo(nodo.derecha)
-            print(nodo.dato, end=", ")
+            print(nodo.name)
+            print(nodo.password)
+            print(nodo.email)
+            nodo.proyectosAsociados.ImprimirElementos()
 
     def __buscar(self, nodo, codigo):
         if nodo is None:
@@ -126,59 +137,62 @@ class Arbol:
             return self.__buscar(nodo.izquierda, codigo)
         else:
             return self.__buscar(nodo.derecha, codigo)
+    
+    def codigoMinimo(self, nodo):
+        actual = nodo
+
         
-    def eliminarInorden(self, nodo, codigo):
+        while(actual.izquierda is not None):
+            actual = actual.izquierda
+
+        return actual
+
+    
+
+    def __eliminarUsuario(self, raiz, codigo):
+
+        if raiz is None:
+            return raiz
         
-        nodoPorEliminar = self.__buscar(self.raiz, codigo)
-        
-        if nodoPorEliminar.izquierda is None and nodoPorEliminar.derecha is None:
-             nodoPorEliminar = None
-        
-        elif nodoPorEliminar.izquierda is not None and nodoPorEliminar.derecha is None:
-            nodoPorEliminar = nodoPorEliminar.izquierda
+    
+        if codigo < raiz.codigo:
+            raiz.izquierda = self.__eliminarUsuario(raiz.izquierda, codigo)
+        elif(codigo > raiz.codigo):
+            raiz.derecha = self.__eliminarUsuario(raiz.derecha, codigo)
+        else:
             
-        elif nodoPorEliminar.izquierda is  None and nodoPorEliminar.derecha is not  None:
-            print("") 
-        elif nodoPorEliminar.izquierda is not None and nodoPorEliminar.derecha is not  None:
-            print("")
-        if nodo is None:
-            return nodo
+            if raiz.izquierda is None:
+                if raiz is self.raiz:
+                    self.raiz = raiz.derecha
+                    return
+                else:
+                    temp = raiz.derecha
+                    raiz = None
+                    return temp
 
-        # Recorrer el subárbol izquierdo
-        nodo.left = self.EliminarInorden(nodo.left, nomb)
+            elif raiz.derecha is None:
+                if raiz is self.raiz:
+                    self.raiz = raiz.izquierda
+                    return
+                else:
+                    temp = raiz.izquierda
+                    raiz = None
+                    return temp
 
-        # Si el nombre coincide con el nombre del nodo actual, eliminarlo
-        if nodo.name == nomb:
-        # Caso 1: Nodo sin hijos o con un solo hijo
-            if nodo.left is None:
-             temp = nodo.right
-             nodo = None
-             return temp
-            elif nodo.right is None:
-                temp = nodo.left
-                nodo = None
-                return temp
+            
+            temp = self.codigoMinimo(raiz.derecha)
 
-        # Caso 2: Nodo con dos hijos
-        # Encontrar el sucesor inmediato (el nodo más pequeño en el subárbol derecho)
-        temp = self.EncontrarMinimo(nodo.right)
 
-        # Copiar el valor del sucesor inmediato al nodo que se eliminará
-        nodo.name = temp.name
+            raiz.name = temp.name
+            raiz.password = temp.password
+            raiz.email = temp.email
+            raiz.proyectosAsociados = temp.proyectosAsociados
+            raiz.codigo = temp.codigo
 
-        # Eliminar el sucesor inmediato
-        nodo.right = self.EliminarInorden(nodo.right, temp.name)
+            
+            raiz.derecha = self.__eliminarUsuario(raiz.derecha, temp.codigo)
 
-        # Recorrer el subárbol derecho
-        nodo.right = self.EliminarInorden(nodo.right, nomb)
-
-        return nodo
-
-    def EncontrarMinimo(self, nodo):
-        current = nodo
-        while current.left is not None:
-            current = current.left
-        return current
+        return raiz
 
     # Funciones públicas
 
@@ -203,17 +217,174 @@ class Arbol:
     def buscar(self, codigo):
         return self.__buscar(self.raiz, codigo)
     
+    def eliminarUsuario(self, codigo):
+        return self.__eliminarUsuario(self.raiz, codigo)
+    
     
 
-
+"""
 ##Zona de Pruebas
+
 usuario1 = User("Juan", "k123", "asomfo@gmail.com", None, 3 )
 usuario2 = User("Paolo", "k123", "asomfo@gmail.com", None, 1 )
 usuario3 = User("Manuel", "k123", "asomfo@gmail.com", None, 7 )
+usuario4 = User("Juan Camilo", "k123", "asomfo@gmail.com", None, 9 )
+usuario5 = User("Andres", "k123", "asomfo@gmail.com", None, 4 )
 
 arbolPrueba = Arbol(usuario1)
 arbolPrueba.agregar(usuario2)
 arbolPrueba.agregar(usuario3)
+arbolPrueba.agregar(usuario4)
+arbolPrueba.agregar(usuario5)
 arbolPrueba.inorden()
 
-print(arbolPrueba.buscar(7).name)
+print(arbolPrueba.buscar(9).name)
+
+arbolPrueba.eliminarUsuario(arbolPrueba.raiz, 7)
+arbolPrueba.inorden()
+arbolPrueba.eliminarUsuario(arbolPrueba.raiz, 3)
+print("--------")
+arbolPrueba.inorden()
+arbolPrueba.eliminarUsuario(arbolPrueba.raiz, 1)
+print("--------")
+arbolPrueba.inorden()
+arbolPrueba.eliminarUsuario(arbolPrueba.raiz, 4)
+print("--------")
+arbolPrueba.inorden()
+"""
+
+class Sistema():
+    def menu():    
+        print("Bienvenido al Sistema de Manejo de Proyectos de Software. ¿Qué desea hacer?")
+        print("1. Consultar los usuarios actuales.")
+        print("2. Agregar un usuario a la base de datos.")
+        print("3. Buscar un usuario en la base de datos. ")
+        print("4. Eliminar un usuario de la base de datos. ")
+        print("5. Consultar/Añadir sus proyectos. (Acceso personal)")
+        print("6. Cambiar su contraseña. (Acceso personal)")
+        print("7. Salir ")
+        enElMenu = True
+
+        centroDeDatos = Arbol(None)
+
+        while enElMenu:
+            print("-----------------------")
+            
+            opcion = input("Ingrese su opción: ")
+            if opcion == "1":
+                if centroDeDatos.raiz is None:
+                    print("El árbol de datos se encuentra vacío. Intente agregando usuarios nuevos.")
+
+                else:
+                    centroDeDatos.inorden()
+
+                print("-----------------------")       
+            
+            
+            elif opcion == "2":
+                print("Ingrese los datos a continuación: ")
+                nombre= input("Nombre: ")
+                password= input("Contraseña: ")
+                email=input("Correo electrónico: ")
+                codigo = int(input("Código/ID (7 Cifras): "))
+                if len(str(codigo)) == 7:
+                    centroDeDatos.agregar(User(nombre, password, email, ListaProyectos(), codigo)) 
+                    print("Agregado correctamente.")                   
+                else:
+                    print("Código incorrecto. Intente de nuevo.")
+
+                print("-----------------------")   
+
+            elif opcion == "3":
+                codigoABuscar = int(input("Ingrese el código del usuario: "))
+                
+                busqueda = centroDeDatos.buscar(codigoABuscar)
+
+                if busqueda is None:
+                    print("No existe ningún usuario registrado con ese código. ")
+
+                else:
+                    print("Resultado de búsqueda: ")
+                    print("Usuario: ", busqueda.name)
+                    print("Email: ", busqueda.email)
+                    if  busqueda.proyectosAsociados.IndicarVacia():
+                        print("El usuario no tiene proyectos. ")
+
+                    else:
+                        print("Proyectos del usuario: ")
+                        busqueda.proyectosAsociados.ImprimirElementos()
+
+                print("-----------------------")               
+                
+
+            elif opcion == "4":
+                codigo = int(input("Ingrese el código del usuario a eliminar: "))
+
+                busqueda = centroDeDatos.buscar(codigo)
+
+                if busqueda is None:
+                    print("No existe ningún usuario registrado con ese código. ")
+
+
+                else:
+                    centroDeDatos.eliminarUsuario(codigo)
+                    print("El usuario se ha borrado satisfactoriamente. ")
+            
+            elif opcion == "5":
+                codigo = int(input("Ingrese su código de usuario: "))
+                password = input("Ingrese su contraseña de usuario: ")
+
+                busqueda = centroDeDatos.buscar(codigo)
+
+                if busqueda is not None and busqueda.password == password:
+                    print("Sus proyectos son: ")
+
+                    if  busqueda.proyectosAsociados.IndicarVacia():
+                        print("[No tiene proyectos en este momento]")
+
+                    else:
+                        busqueda.proyectosAsociados.ImprimirElementos()
+                    
+                    add = input("Desea añadir algún proyecto? (S/N)")
+
+                    if add == "S":
+                        print("Ingrese los datos a continuación: ")
+                        nombre= input("Nombre: ")
+                        fechaInicio= input("Fecha de Inicio: ")
+                        fechaFin =input("Fecha de Fin: ")
+                        descripcion = input("Descripción: ")
+                        busqueda.proyectosAsociados.AgregarInicio(Proyecto(fechaInicio, fechaFin, nombre, descripcion))
+                        print("Proyecto añadido satisfactoriamente. ")
+
+                    else:
+                        print("Sesión finalizada") 
+
+                else:
+
+                    print("Código o contraseña incorrectas. ")               
+            
+            elif opcion == "6":
+                codigo = int(input("Ingrese su código de usuario: "))
+                password = input("Ingrese su contraseña de usuario: ")
+
+                busqueda = centroDeDatos.buscar(codigo)
+
+                if busqueda is not None and busqueda.password == password:
+                    newPassword = input("Ingrese su nueva contraseña: ")
+                    busqueda.password = newPassword
+                    print("Contraseña cambiada con éxito. ")
+                    
+
+                else:
+                    print("Código o contraseña incorrectas. ")
+
+
+            elif opcion == "7":
+                enElMenu = False
+
+            else:
+                print("Opción inválida. Intente nuevamente.")
+
+##Función principal 
+
+Sistema.menu()
